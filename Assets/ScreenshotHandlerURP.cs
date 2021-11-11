@@ -1,35 +1,32 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
 
 public class ScreenshotHandlerURP : ScreenshotHandlerBase
 {
-	public string m_cameraName;
-
 	void OnEnable()
 	{
-		RenderPipelineManager.beginCameraRendering += OnBeginCameraRendering;
+		RenderPipelineManager.endCameraRendering += OnEndCameraRendering;
 	}
 
 	void OnDisable()
 	{
-		RenderPipelineManager.beginCameraRendering -= OnBeginCameraRendering;
+		RenderPipelineManager.endCameraRendering -= OnEndCameraRendering;
 	}
 
-	void OnBeginCameraRendering(ScriptableRenderContext context, Camera camera)
+	private void OnEndCameraRendering(ScriptableRenderContext context, Camera camera)
 	{
-		if (camera.gameObject.name == m_cameraName)
+		if (m_bTakeScreenshotNextFrame)
 		{
-			m_Camera = camera;
-		}
-	}
+			m_bTakeScreenshotNextFrame = false;
 
-	void OnRenderObject()
-	{
-		if (m_Camera != null)
-		{
-			takeScreenshot(m_Camera);
+			int iWidth = m_RequestSize.x;
+			int iHeight = m_RequestSize.y;
+			Texture2D screenshotTexture = new Texture2D(iWidth, iHeight, TextureFormat.ARGB32, false);
+			Rect rect = new Rect(0, 0, iWidth, iHeight);
+			screenshotTexture.ReadPixels(rect, 0, 0);
+			screenshotTexture.Apply();
+
+			onScreenshotTaken?.Invoke(screenshotTexture);
 		}
 	}
 }

@@ -5,12 +5,17 @@ public abstract class ScreenshotHandlerBase : MonoBehaviour
 	protected bool m_bTakeScreenshotNextFrame;
 	protected System.Action<Texture2D> onScreenshotTaken;
 
+	protected Vector2Int m_RequestSize;
 	protected Camera m_Camera;
 	protected virtual void setCameraTargetTexture(int _iWidth, int _iHeight)
 	{
-		m_Camera.targetTexture = RenderTexture.GetTemporary(
-			_iWidth,
-			_iHeight, 16);
+		m_RequestSize = new Vector2Int(_iWidth, _iHeight);
+		if (m_Camera != null)
+		{
+			m_Camera.targetTexture = RenderTexture.GetTemporary(
+				_iWidth,
+				_iHeight, 16);
+		}
 	}
 
 	public bool TakeScreenshot(int _iWidth, int _iHeight, System.Action<Texture2D> _onTaken)
@@ -53,27 +58,5 @@ public abstract class ScreenshotHandlerBase : MonoBehaviour
 	public void SaveScreenshotSimple()
 	{
 		SaveScreenshotScreenSize(Application.dataPath + "/current.png" , ()=> { });
-	}
-
-	protected void takeScreenshot(Camera _camera)
-	{
-		if (m_bTakeScreenshotNextFrame == false)
-		{
-			return;
-		}
-
-		m_bTakeScreenshotNextFrame = false;
-		RenderTexture renderTexture = _camera.targetTexture;
-
-		Texture2D renderResult = new Texture2D(
-			renderTexture.width,
-			renderTexture.height,
-			TextureFormat.ARGB32,
-			false);
-		Rect rect = new Rect(0f, 0f, renderTexture.width, renderTexture.height);
-		renderResult.ReadPixels(rect, 0, 0);
-
-		onScreenshotTaken?.Invoke(renderResult);
-		_camera.targetTexture = null;
 	}
 }
